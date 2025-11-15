@@ -1,13 +1,13 @@
 DIR: 
-  dataset: "DIR_OF_FSC147_DATASET"
+  dataset: "/share/project/baiyu/my_datasets/FSCD-147/OpenDataLab___FSCD-147/raw/FSCD-147/FSC147/FSC147_384_V2"
   exp: "bmnet_ep3_dec256_lrb1e-5_lr1e-5_seed42"
-  snapshot: "DIR_FOR_YOUR_CHECKPOINTS"
+  snapshot: "./checkpoints"
 
 DATASET:
   name: "FSC147"
-  list_train: "DIR_OF_FSC147_DATASET/train.txt"
-  list_val: "DIR_OF_FSC147_DATASET/val.txt"
-  list_test: "DIR_OF_FSC147_DATASET/test.txt"
+  list_train: "/share/project/baiyu/my_datasets/FSCD-147/OpenDataLab___FSCD-147/raw/FSCD-147/FSC147/FSC147_384_V2/train.txt"
+  list_val: "/share/project/baiyu/my_datasets/FSCD-147/OpenDataLab___FSCD-147/raw/FSCD-147/FSC147/FSC147_384_V2/val.txt"
+  list_test: "/share/project/baiyu/my_datasets/FSCD-147/OpenDataLab___FSCD-147/raw/FSCD-147/FSC147/FSC147_384_V2/test.txt"
   exemplar_number: 3
   downsampling_rate: 1
 

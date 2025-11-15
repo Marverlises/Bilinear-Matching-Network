@@ -169,7 +169,7 @@ if __name__ == '__main__':
     
     cfg.DIR.output_dir = os.path.join(cfg.DIR.snapshot, cfg.DIR.exp)
     if not os.path.exists(cfg.DIR.output_dir):
-        os.mkdir(cfg.DIR.output_dir)    
+        os.makedirs(cfg.DIR.output_dir, exist_ok=True)
 
     cfg.TRAIN.resume = os.path.join(cfg.DIR.output_dir, cfg.TRAIN.resume)
     cfg.VAL.resume = os.path.join(cfg.DIR.output_dir, cfg.VAL.resume)
