@@ -74,16 +74,38 @@ class Visualizer:
         # Draw exemplar boxes if provided
         if exemplar_boxes is not None:
             for box in exemplar_boxes:
-                # Convert numpy arrays/scalars to Python native types to avoid matplotlib errors
-                # Convert to numpy array, flatten, then convert to Python list
-                # This ensures all values are Python native types
-                box_arr = np.asarray(box).ravel()
-                box_list = box_arr.tolist()  # Convert to Python list
-                x1, y1, x2, y2 = float(box_list[0]), float(box_list[1]), float(box_list[2]), float(box_list[3])
-
-                rect = patches.Rectangle((x1, y1), x2-x1, y2-y1,
-                                        linewidth=2, edgecolor='red', facecolor='none')
-                axes[0].add_patch(rect)
+                # Handle different box formats:
+                # Format 1: [[x1, y1], [x2, y2]] - nested list format
+                # Format 2: [x1, y1, x2, y2] - flat list format
+                box_arr = np.asarray(box)
+                
+                if box_arr.ndim == 2 and box_arr.shape == (2, 2):
+                    # Format: [[x1, y1], [x2, y2]]
+                    x1, y1 = float(box_arr[0, 0]), float(box_arr[0, 1])
+                    x2, y2 = float(box_arr[1, 0]), float(box_arr[1, 1])
+                elif box_arr.ndim == 1 and box_arr.size == 4:
+                    # Format: [x1, y1, x2, y2]
+                    x1, y1, x2, y2 = float(box_arr[0]), float(box_arr[1]), float(box_arr[2]), float(box_arr[3])
+                else:
+                    # Try to flatten and extract
+                    box_flat = box_arr.ravel()
+                    if box_flat.size >= 4:
+                        x1, y1, x2, y2 = float(box_flat[0]), float(box_flat[1]), float(box_flat[2]), float(box_flat[3])
+                    else:
+                        print(f"Warning: Invalid box format, skipping. Box shape: {box_arr.shape}")
+                        continue
+                
+                # Ensure valid rectangle coordinates
+                x1, x2 = min(x1, x2), max(x1, x2)
+                y1, y2 = min(y1, y2), max(y1, y2)
+                
+                # Only draw if box has valid dimensions
+                if abs(x2 - x1) > 1 and abs(y2 - y1) > 1:
+                    rect = patches.Rectangle((x1, y1), x2-x1, y2-y1,
+                                            linewidth=2, edgecolor='red', facecolor='none')
+                    axes[0].add_patch(rect)
+                else:
+                    print(f"Warning: Box too small or invalid, skipping. Box: ({x1}, {y1}, {x2}, {y2})")
 
         # Correlation map as heatmap
         im1 = axes[1].imshow(corr_map, cmap=self.cmap, interpolation='bilinear')
