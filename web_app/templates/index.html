@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Agnostic Counting Visualization Tool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Class Agnostic Counting Visualization Tool</h1>
+            <p class="subtitle">Upload an image and draw exemplar boxes to generate correlation map, dynamic weights, and density map visualizations</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Upload area -->
+            <div class="upload-section">
+                <div class="upload-box" id="uploadBox">
+                    <input type="file" id="imageInput" accept="image/*" style="display: none;">
+                    <div class="upload-placeholder" id="uploadPlaceholder">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
+                        </svg>
+                        <p>Click or drag image here to upload</p>
+                        <p class="upload-hint">Supports JPG, PNG formats, max 16MB</p>
+                    </div>
+                    <div id="imageCanvasContainer" style="display: none; position: relative; margin-top: 20px;">
+                        <canvas id="imageCanvas" style="max-width: 100%; max-height: 600px; border: 2px solid #667eea; border-radius: 10px; cursor: crosshair;"></canvas>
+                        <div class="canvas-info">
+                            <p><strong>Important:</strong> Please draw exemplar boxes on the image (at least 1, up to 3)</p>
+                            <p class="canvas-hint">Click and drag to draw rectangular boxes, selecting example instances of the target objects to count. After drawing, click the "Preview Exemplar Boxes" button to view the selected regions.</p>
+                            <div class="box-counter">
+                                <span>Exemplar boxes drawn: <span id="boxCount">0</span>/3</span>
+                                <button id="clearBoxesBtn" class="btn btn-small">Clear All Boxes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button id="previewBtn" class="btn btn-primary" disabled>Preview Exemplar Boxes</button>
+                    <button id="clearBtn" class="btn btn-secondary">Clear</button>
+                </div>
+            </div>
+
+            <!-- Preview confirmation area -->
+            <div id="previewSection" class="preview-section" style="display: none;">
+                <h2>Preview Exemplar Box Regions</h2>
+                <p class="preview-hint">Please confirm that the following exemplar boxes correctly select the target objects. After confirmation, click the "Confirm and Generate Visualizations" button.</p>
+                
+                <div id="previewGrid" class="preview-grid">
+                    <!-- Preview images will be dynamically inserted here -->
+                </div>
+                
+                <div class="preview-controls">
+                    <button id="confirmBtn" class="btn btn-primary">Confirm and Generate Visualizations</button>
+                    <button id="cancelPreviewBtn" class="btn btn-secondary">Go Back to Edit</button>
+                </div>
+            </div>
+
+            <!-- Loading indicator -->
+            <div id="loadingIndicator" class="loading" style="display: none;">
+                <div class="spinner"></div>
+                <p>Processing image, please wait...</p>
+            </div>
+
+            <!-- Results area -->
+            <div id="resultsSection" class="results-section" style="display: none;">
+                <h2>Visualization Results</h2>
+                
+                <div class="count-info">
+                    <div class="count-card">
+                        <span class="count-label">Predicted Count</span>
+                        <span class="count-value" id="predCount">-</span>
+                    </div>
+                </div>
+
+                <div class="visualization-grid">
+                    <!-- Correlation map -->
+                    <div class="viz-card">
+                        <h3>1. Correlation Map</h3>
+                        <div class="image-container">
+                            <img id="correlationMapImg" src="" alt="Correlation Map" class="zoomable-image" data-title="Correlation Map">
+                        </div>
+                        <p class="viz-description">
+                            Similarity heatmap showing the similarity between each pixel location and the exemplars calculated by the model.
+                            Brighter colors (red/yellow) indicate higher similarity, more likely to be target objects.
+                        </p>
+                    </div>
+
+                    <!-- Dynamic weights -->
+                    <div class="viz-card">
+                        <h3>2. Dynamic Weights</h3>
+                        <div class="image-container">
+                            <img id="dynamicWeightsImg" src="" alt="Dynamic Weights" class="zoomable-image" data-title="Dynamic Weights">
+                        </div>
+                        <p class="viz-description">
+                            Dynamic channel attention weight heatmap. The horizontal axis is the feature channel dimension, and the vertical axis is the index of different exemplars.
+                            Exemplars of the same category typically produce similar weight patterns.
+                        </p>
+                    </div>
+
+                    <!-- Density map -->
+                    <div class="viz-card">
+                        <h3>3. Density Map</h3>
+                        <div class="image-container">
+                            <img id="densityMapImg" src="" alt="Density Map" class="zoomable-image" data-title="Density Map">
+                        </div>
+                        <p class="viz-description">
+                            Predicted density map showing the target density distribution predicted by the model.
+                            Regions with high density values (bright colors) indicate locations where target objects are concentrated.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error message -->
+            <div id="errorMessage" class="error-message" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- Image zoom modal -->
+    <div id="imageModal" class="modal">
+        <span class="modal-close">&times;</span>
+        <img class="modal-content" id="modalImage">
+        <div class="modal-caption" id="modalCaption"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
+

@@ -1,0 +1,11 @@
+Flask>=2.0.0
+Pillow>=8.0.0
+numpy>=1.19.0
+torch>=1.8.0
+torchvision>=0.9.0
+matplotlib>=3.3.0
+seaborn>=0.11.0
+werkzeug>=2.0.0
+
+
+
