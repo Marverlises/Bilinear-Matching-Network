@@ -72,3 +72,29 @@ If you find this work or code useful for your research, please cite:
 
 ## Permission and Disclaimer
 This code is only for non-commercial purposes.  Trained models included in this repository can only be used/distributed for non-commercial purposes. Anyone who violates this rule will be at his/her own risk.
+
+
+# Visualization
+详情见run_visualization.py文件头部注释。
+直接运行run_visualization.py文件即可生成可视化结果。
+运行前请在run_visualization.py文件中配置好相关路径参数如下：
+```python
+
+# ==================== 配置区域 - 请根据你的实际情况修改 ====================
+# 配置文件路径
+CONFIG_FILE = "config/bmnet+_fsc147.yaml"
+
+# 模型检查点路径
+CHECKPOINT_PATH = "checkpoints/best/model_best.pth"
+
+# 输出目录
+OUTPUT_DIR = "./visualizations"
+
+# 可视化样本数量（-1表示所有样本，或指定具体数字如3）
+NUM_SAMPLES = 1
+
+# 颜色映射（可选：'jet', 'viridis', 'hot', 'coolwarm'等）
+COLORMAP = 'jet'
+# ===========================================================================
+
+```
