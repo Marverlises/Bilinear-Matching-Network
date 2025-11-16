@@ -3,6 +3,7 @@ Basic class agnostic counting model with backbone, refiner, matcher and counter.
 """
 import torch
 from torch import nn
+from models.matcher import DynamicSimilarityMatcher
 
 class CACModel(nn.Module):
     """ Class Agnostic Counting Model"""
@@ -24,15 +25,15 @@ class CACModel(nn.Module):
         self.hidden_dim = hidden_dim
         self.input_proj = nn.Conv2d(backbone.num_channels, hidden_dim, kernel_size=1)
         
-    def forward(self, samples: torch.Tensor, patches: torch.Tensor, is_train: bool):
-        """ The forward expects samples containing query images and corresponding exemplar patches.
+    def forward(self, samples: torch.Tensor, patches: torch.Tensor, is_train: bool, return_intermediate=False):
+        """ The forward expects samples containing query images and corresponding exemplar patches.
             samples is a stack of query images, of shape [batch_size X 3 X H X W]
             patches is a torch Tensor, of shape [batch_size x num_patches x 3 x 128 x 128]
             The size of patches are small than samples
 
             It returns a dict with the following elements:
                - "density_map": Shape= [batch_size x 1 X h_query X w_query]
-               - "patch_feature": Features vectors for exemplars, not available during testing.
+               - "patch_feature": Features vectors for exemplars, not available during testing. 
                                   They are used to compute similarity loss. 
                                 Shape= [exemplar_number x bs X hidden_dim]
                - "img_feature": Feature maps for query images, not available during testing.
@@ -49,13 +50,32 @@ class CACModel(nn.Module):
         patch_feature = self.EPF_extractor(patch_feature, scale_embedding) # compress the feature maps into vectors and inject scale embeddings
         
         # Stage 2: enhance feature representation, e.g., the self similarity module.
-        refined_feature, patch_feature = self.refiner(features, patch_feature)
+        if return_intermediate:
+            refined_feature, patch_feature, attention_maps = self.refiner(features, patch_feature, return_attention=True)
+        else:
+            refined_feature, patch_feature = self.refiner(features, patch_feature)
+        
         # Stage 3: generate similarity map by densely measuring similarity. 
-        counting_feature, corr_map = self.matcher(refined_feature, patch_feature)
+        if return_intermediate and isinstance(self.matcher, DynamicSimilarityMatcher):
+            counting_feature, corr_map, dynamic_weights = self.matcher(refined_feature, patch_feature, return_dynamic_weights=True)
+        else:
+            counting_feature, corr_map = self.matcher(refined_feature, patch_feature)
+            dynamic_weights = None
+        
         # Stage 4: predicting density map 
         density_map = self.counter(counting_feature)
         
-        if not is_train:
+        if return_intermediate:
+            return {
+                'density_map': density_map,
+                'corr_map': corr_map,
+                'attention_maps': attention_maps if return_intermediate else None,
+                'dynamic_weights': dynamic_weights,
+                'refined_features': refined_feature,
+                'patch_features': patch_feature,
+                'query_features': features
+            }
+        elif not is_train:
             return density_map
         else:
             return {'corr_map': corr_map, 'density_map': density_map}

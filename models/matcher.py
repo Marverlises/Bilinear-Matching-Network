@@ -96,7 +96,7 @@ class DynamicSimilarityMatcher(nn.Module):
         else:
             raise NotImplementedError
             
-    def forward(self, features, patches):
+    def forward(self, features, patches, return_dynamic_weights=False):
         bs, c, h, w = features.shape
         features = features.flatten(2).permute(2, 0, 1)  # hw * bs * dim
         
@@ -113,8 +113,14 @@ class DynamicSimilarityMatcher(nn.Module):
         out = torch.cat((out, corr), dim=-1)
         
         out = out.permute(1,0,2)
-        return out.permute(1, 2, 0).view(bs, c+1, h, w), energy 
-    
+        if return_dynamic_weights:
+            # Return dynamic channel attention weights for visualization
+            # patches_ca shape: (exemplar_number, bs, proj_dim)
+            dynamic_weights = patches_ca.permute(1, 0, 2)  # bs * exemplar_number * proj_dim
+            return out.permute(1, 2, 0).view(bs, c+1, h, w), energy, dynamic_weights
+        else:
+            return out.permute(1, 2, 0).view(bs, c+1, h, w), energy 
+
     def _weight_init_(self):
         for p in self.parameters():
                 if p.dim() > 1:

@@ -1,0 +1,61 @@
+DIR: 
+  dataset: "/share/project/baiyu/my_datasets/FSCD-147/OpenDataLab___FSCD-147/raw/FSCD-147/FSC147/FSC147_384_V2"
+  exp: "bmnet_vit_large_ep3_dec256_lrb1e-5_lr1e-5_seed42"
+  snapshot: "./checkpoints"
+
+DATASET:
+  name: "FSC147"
+  list_train: "/share/project/baiyu/my_datasets/FSCD-147/OpenDataLab___FSCD-147/raw/FSCD-147/FSC147/FSC147_384_V2/train.txt"
+  list_val: "/share/project/baiyu/my_datasets/FSCD-147/OpenDataLab___FSCD-147/raw/FSCD-147/FSC147/FSC147_384_V2/val.txt"
+  list_test: "/share/project/baiyu/my_datasets/FSCD-147/OpenDataLab___FSCD-147/raw/FSCD-147/FSC147/FSC147_384_V2/test.txt"
+  exemplar_number: 3
+  downsampling_rate: 1
+
+MODEL:
+  # Use ViT as backbone instead of ResNet
+  # Options: "vit", "vit_base", "vit_large", "vit_small", "vit_tiny"
+  # Or use full timm model name: "vit_base_patch16_224", "vit_large_patch16_224", etc.
+  backbone: "vit_large"
+  fix_bn: True  # Not used for ViT, but kept for compatibility
+  epf_extractor: "direct_pooling"
+  ep_scale_embedding: False
+  ep_scale_number: 20
+  refiner: "none"
+  matcher: "bilinear_similarity_matcher"
+  counter: "density_x16"
+  # backbone_layer is not used for ViT, but kept for compatibility
+  backbone_layer: "layer3"
+  hidden_dim: 256
+  refiner_layers: 1
+  matcher_layers: 1
+  matcher_proj_dim: 256
+  counter_dim: 257
+  repeat_times: 1
+  pretrain: True  # Use pretrained ViT weights from ImageNet
+
+TRAIN:
+  resume: "model_ckpt.pth"
+  counting_loss: "l2loss"
+  contrast_loss: "none"
+  contrast_weight: 5e-6
+  optimizer: "AdamW"
+  device: "cuda:0"
+  batch_size: 4
+  epochs: 300
+  lr_backbone: 1e-5
+  lr: 1e-5
+  lr_drop: 300
+  momentum: 0.95
+  weight_decay: 5e-4
+  clip_max_norm: 0.1
+  num_workers: 1
+  seed: 42
+
+VAL:
+  resume: "model_best.pth"
+  evaluate_only: False
+  visualization: False
+
+
+
+

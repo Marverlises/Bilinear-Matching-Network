@@ -13,10 +13,18 @@ class SelfSimilarityModule(nn.Module):
     def __init__(self, hidden_dim, proj_dim, layer_number):
         super().__init__()
         self.layers = nn.ModuleList([copy.deepcopy(SelfSimilarityLayer(hidden_dim=hidden_dim, proj_dim=proj_dim)) for i in range(layer_number)])
-    def forward(self, features, patches):
+    def forward(self, features, patches, return_attention=False):
+        attention_maps = []
         for layer in self.layers:
-            features, patches = layer(features, patches)
-        return features, patches
+            if return_attention:
+                features, patches, attn = layer(features, patches, return_attention=True)
+                attention_maps.append(attn)
+            else:
+                features, patches = layer(features, patches)
+        if return_attention:
+            return features, patches, attention_maps
+        else:
+            return features, patches
 
 '''
 Layer in self similarity module
@@ -41,7 +49,7 @@ class SelfSimilarityLayer(nn.Module):
             
         self._weight_init_()
     
-    def forward(self, features, patches):
+    def forward(self, features, patches, return_attention=False):
         """
             inputs :
                 x : input feature maps (B X C X W X H)
@@ -72,7 +80,12 @@ class SelfSimilarityLayer(nn.Module):
         out_feat = out_feat.reshape(m_batchsize, C, width, height) # B X C X H X W
         out_patch = out_patch.permute(2, 0, 1) # query_number * B * dim
         
-        return self.post_conv(out_feat), out_patch
+        if return_attention:
+            # Return attention map for visualization (only for query image features, not patches)
+            attention_map = attention[:, :width*height, :width*height]  # B X N X N
+            return self.post_conv(out_feat), out_patch, attention_map
+        else:
+            return self.post_conv(out_feat), out_patch
     
     def _weight_init_(self):
         for p in self.parameters():
@@ -97,8 +110,11 @@ class NoneRefiner(object):
     def __init__(self):
         pass
     
-    def __call__(self, features, patches):
-        return features, patches
+    def __call__(self, features, patches, return_attention=False):
+        if return_attention:
+            return features, patches, None
+        else:
+            return features, patches
 
 
 def build_refiner(cfg):
