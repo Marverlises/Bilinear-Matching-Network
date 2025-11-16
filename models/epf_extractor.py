@@ -49,9 +49,36 @@ class DirectPooling(nn.Module):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
 
-def build_epf_extractor(cfg):
+def build_epf_extractor(cfg, backbone=None):
+    """
+    Build EPF extractor.
+    
+    Args:
+        cfg: Configuration object
+        backbone: Backbone model instance (optional, used to get output dimension for ViT)
+    """
     extractor_name = cfg.MODEL.epf_extractor
-    input_dim = 1024 if cfg.MODEL.backbone_layer == 'layer3' else 2048
+    
+    # Determine input dimension based on backbone type
+    backbone_name = cfg.MODEL.backbone.lower()
+    if backbone_name.startswith('vit') or 'transformer' in backbone_name:
+        # For ViT, get the dimension from the backbone if provided
+        if backbone is not None:
+            input_dim = backbone.num_channels
+        else:
+            # Default ViT dimensions
+            if 'large' in backbone_name:
+                input_dim = 1024
+            elif 'small' in backbone_name:
+                input_dim = 384
+            elif 'tiny' in backbone_name:
+                input_dim = 192
+            else:  # base
+                input_dim = 768
+    else:
+        # ResNet backbone
+        input_dim = 1024 if cfg.MODEL.backbone_layer == 'layer3' else 2048
+    
     if extractor_name == 'direct_pooling':
         return DirectPooling(input_dim=input_dim,
                              hidden_dim=cfg.MODEL.hidden_dim,

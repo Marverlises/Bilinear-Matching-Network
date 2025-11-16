@@ -9,7 +9,7 @@ from models.class_agnostic_counting_model import CACModel
 
 def build_model(cfg):
     backbone = build_backbone(cfg)
-    epf_extractor = build_epf_extractor(cfg)
+    epf_extractor = build_epf_extractor(cfg, backbone=backbone)
     refiner = build_refiner(cfg)
     matcher = build_matcher(cfg)
     counter = get_counter(cfg)

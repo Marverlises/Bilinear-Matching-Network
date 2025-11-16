@@ -80,7 +80,16 @@ def get_loss(cfg):
     else:
         raise NotImplementedError
     
-    feature_drate = 32 if cfg.MODEL.backbone_layer == "layer4" else 16
+    # Determine feature downsampling rate based on backbone type
+    backbone_name = cfg.MODEL.backbone.lower()
+    if backbone_name.startswith('vit') or 'transformer' in backbone_name:
+        # ViT typically uses patch_size=16, so downsampling rate is 16
+        # This may vary based on the specific ViT model configuration
+        feature_drate = 16  # Default for patch16 models
+    else:
+        # ResNet backbone
+        feature_drate = 32 if cfg.MODEL.backbone_layer == "layer4" else 16
+    
     if cfg.TRAIN.contrast_loss == 'info_nce':
         contrast_loss = InfoNCELoss(device=cfg.TRAIN.device, downsampling_rate=feature_drate)
     elif cfg.TRAIN.contrast_loss == 'none':
