@@ -53,7 +53,7 @@ TRAIN:
 
 VAL:
   resume: "model_best.pth"
-  evaluate_only: False
+  evaluate_only: True
   visualization: False
 
 

@@ -3,7 +3,10 @@
 只需修改下面的配置路径即可使用
 """
 import os
-os.environ['CUDA_VISIBLE_DEVICES'] = '2'
+os.environ['CUDA_VISIBLE_DEVICES'] = '1'
+# import pydevd_pycharm
+# pydevd_pycharm.settrace('127.0.0.1', port=29601)
+
 import json
 import numpy as np
 from PIL import Image
@@ -18,10 +21,10 @@ from util.visualization import Visualizer
 
 # ==================== 配置区域 - 请根据你的实际情况修改 ====================
 # 配置文件路径
-CONFIG_FILE = "config/bmnet+_fsc147.yaml"
+CONFIG_FILE = "config/bmnet_vit-base_fsc147.yaml"
 
 # 模型检查点路径
-CHECKPOINT_PATH = "checkpoints/best/model_best.pth"
+CHECKPOINT_PATH = "checkpoints/bmnet_vit_base_ep3_dec256_lrb1e-5_lr1e-5_seed42/model_best.pth"
 
 # 输出目录
 OUTPUT_DIR = "./visualizations"

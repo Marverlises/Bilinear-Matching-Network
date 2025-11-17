@@ -68,7 +68,7 @@ class Visualizer:
 
         # Original image
         axes[0].imshow(original_img.astype(np.uint8))
-        axes[0].set_title('Original Image', fontsize=14, fontweight='bold')
+        axes[0].set_title('Original Image', fontsize=20, fontweight='bold')
         axes[0].axis('off')
 
         # Draw exemplar boxes if provided
@@ -78,27 +78,11 @@ class Visualizer:
                 # Format 1: [[x1, y1], [x2, y2]] - nested list format
                 # Format 2: [x1, y1, x2, y2] - flat list format
                 box_arr = np.asarray(box)
-                
-                if box_arr.ndim == 2 and box_arr.shape == (2, 2):
-                    # Format: [[x1, y1], [x2, y2]]
-                    x1, y1 = float(box_arr[0, 0]), float(box_arr[0, 1])
-                    x2, y2 = float(box_arr[1, 0]), float(box_arr[1, 1])
-                elif box_arr.ndim == 1 and box_arr.size == 4:
-                    # Format: [x1, y1, x2, y2]
-                    x1, y1, x2, y2 = float(box_arr[0]), float(box_arr[1]), float(box_arr[2]), float(box_arr[3])
-                else:
-                    # Try to flatten and extract
-                    box_flat = box_arr.ravel()
-                    if box_flat.size >= 4:
-                        x1, y1, x2, y2 = float(box_flat[0]), float(box_flat[1]), float(box_flat[2]), float(box_flat[3])
-                    else:
-                        print(f"Warning: Invalid box format, skipping. Box shape: {box_arr.shape}")
-                        continue
-                
-                # Ensure valid rectangle coordinates
-                x1, x2 = min(x1, x2), max(x1, x2)
-                y1, y2 = min(y1, y2), max(y1, y2)
-                
+                x_arr = box_arr[:, 0]
+                y_arr = box_arr[:, 1]
+                x1, y1 = np.min(x_arr), np.min(y_arr)
+                x2, y2 = np.max(x_arr), np.max(y_arr)
+
                 # Only draw if box has valid dimensions
                 if abs(x2 - x1) > 1 and abs(y2 - y1) > 1:
                     rect = patches.Rectangle((x1, y1), x2-x1, y2-y1,
@@ -109,7 +93,7 @@ class Visualizer:
 
         # Correlation map as heatmap
         im1 = axes[1].imshow(corr_map, cmap=self.cmap, interpolation='bilinear')
-        axes[1].set_title('Similarity Map (Heatmap)', fontsize=14, fontweight='bold')
+        axes[1].set_title('Similarity Map (Heatmap)', fontsize=18, fontweight='bold')
         axes[1].axis('off')
         plt.colorbar(im1, ax=axes[1], fraction=0.046)
 
@@ -117,10 +101,10 @@ class Visualizer:
         corr_colored = self.cmap(corr_map)[:, :, :3] * 255
         overlay = 0.6 * corr_colored + 0.4 * original_img
         axes[2].imshow(overlay.astype(np.uint8))
-        axes[2].set_title('Overlay Visualization', fontsize=14, fontweight='bold')
+        axes[2].set_title('Overlay Visualization', fontsize=18, fontweight='bold')
         axes[2].axis('off')
 
-        plt.suptitle(title, fontsize=16, fontweight='bold', y=0.98)
+        plt.suptitle(title, fontsize=18, fontweight='bold', y=0.98)
         plt.tight_layout()
 
         if save_path:
@@ -155,9 +139,9 @@ class Visualizer:
                       interpolation='nearest', vmin=-1, vmax=1)
 
         # Set labels
-        ax.set_xlabel('Channel Dimension', fontsize=12, fontweight='bold')
-        ax.set_ylabel('Exemplar Index', fontsize=12, fontweight='bold')
-        ax.set_title(title, fontsize=14, fontweight='bold')
+        ax.set_xlabel('Channel Dimension', fontsize=15, fontweight='bold')
+        ax.set_ylabel('Exemplar Index', fontsize=15, fontweight='bold')
+        ax.set_title(title, fontsize=18, fontweight='bold')
 
         # Set ticks
         ax.set_yticks(range(num_exemplars))
@@ -322,7 +306,7 @@ class Visualizer:
             return fig
 
     def visualize_density_map(self, pred_density, gt_density, original_img,
-                             pred_count, gt_count, save_path=None, title="Density Map Comparison"):
+                             pred_count, gt_count, save_path=None,exemplar_boxes=None, title="Density Map Comparison"):
         """
         Visualize predicted and ground truth density maps (Fig. 6 in paper)
 
@@ -333,6 +317,7 @@ class Visualizer:
             pred_count: Predicted count
             gt_count: Ground truth count
             save_path: Path to save the visualization
+            exemplar_boxes: List of exemplar boxes [[x1, y1, x2, y2], ...]
             title: Title for the figure
         """
         # Convert to numpy
@@ -380,43 +365,64 @@ class Visualizer:
 
         # Row 1: Original, GT Density, GT Overlay
         axes[0, 0].imshow(original_img.astype(np.uint8))
-        axes[0, 0].set_title('Original Image', fontsize=14, fontweight='bold')
+        axes[0, 0].set_title('Original Image', fontsize=18, fontweight='bold')
         axes[0, 0].axis('off')
 
         im1 = axes[0, 1].imshow(gt_density_norm, cmap=self.cmap, interpolation='bilinear')
         axes[0, 1].set_title(f'Ground Truth Density Map (Count: {gt_count:.1f})',
-                            fontsize=14, fontweight='bold')
+                            fontsize=18, fontweight='bold')
         axes[0, 1].axis('off')
         plt.colorbar(im1, ax=axes[0, 1], fraction=0.046)
 
         gt_colored = self.cmap(gt_density_norm)[:, :, :3] * 255
         overlay_gt = 0.6 * gt_colored + 0.4 * original_img
         axes[0, 2].imshow(overlay_gt.astype(np.uint8))
-        axes[0, 2].set_title('GT Density Overlay', fontsize=14, fontweight='bold')
+        axes[0, 2].set_title('GT Density Overlay', fontsize=18, fontweight='bold')
         axes[0, 2].axis('off')
 
         # Row 2: Original, Pred Density, Pred Overlay
         axes[1, 0].imshow(original_img.astype(np.uint8))
-        axes[1, 0].set_title('Original Image', fontsize=14, fontweight='bold')
+        axes[1, 0].set_title('Original Image', fontsize=18, fontweight='bold')
         axes[1, 0].axis('off')
 
         im2 = axes[1, 1].imshow(pred_density_norm, cmap=self.cmap, interpolation='bilinear')
         axes[1, 1].set_title(f'Predicted Density Map (Count: {pred_count:.1f})',
-                            fontsize=14, fontweight='bold')
+                            fontsize=18, fontweight='bold')
         axes[1, 1].axis('off')
         plt.colorbar(im2, ax=axes[1, 1], fraction=0.046)
 
         pred_colored = self.cmap(pred_density_norm)[:, :, :3] * 255
         overlay_pred = 0.6 * pred_colored + 0.4 * original_img
         axes[1, 2].imshow(overlay_pred.astype(np.uint8))
-        axes[1, 2].set_title('Predicted Density Overlay', fontsize=14, fontweight='bold')
+        axes[1, 2].set_title('Predicted Density Overlay', fontsize=18, fontweight='bold')
         axes[1, 2].axis('off')
+        # Draw exemplar boxes if provided
+        if exemplar_boxes is not None:
+            for box in exemplar_boxes:
+                # Handle different box formats:
+                # Format 1: [[x1, y1], [x2, y2]] - nested list format
+                box_arr = np.asarray(box)
+                x_arr = box_arr[:, 0]
+                y_arr = box_arr[:, 1]
+                x1, y1 = np.min(x_arr), np.min(y_arr)
+                x2, y2 = np.max(x_arr), np.max(y_arr)
+
+                # Only draw if box has valid dimensions
+                if abs(x2 - x1) > 1 and abs(y2 - y1) > 1:
+                    rect1 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1,
+                                              linewidth=2, edgecolor='red', facecolor='none')
+                    rect2 = patches.Rectangle((x1, y1), x2 - x1, y2 - y1,
+                                              linewidth=2, edgecolor='red', facecolor='none')
+                    axes[0, 0].add_patch(rect1)
+                    axes[1, 0].add_patch(rect2)
+                else:
+                    print(f"Warning: Box too small or invalid, skipping. Box: ({x1}, {y1}, {x2}, {y2})")
 
         # Add error information
         error = abs(pred_count - gt_count)
         error_pct = (error / (gt_count + 1e-8)) * 100
-        plt.suptitle(f'{title}\nMAE: {error:.2f} ({error_pct:.1f}%)',
-                    fontsize=16, fontweight='bold')
+        plt.suptitle(f'{title}\nMAE: {error:.2f}',
+                    fontsize=20, fontweight='bold')
         plt.tight_layout()
 
         if save_path:
@@ -713,6 +719,7 @@ class Visualizer:
                 pred_density, gt_density, original_img,
                 pred_count or pred_density.sum().item() if isinstance(pred_density, torch.Tensor) else pred_density.sum(),
                 gt_count,
+                exemplar_boxes=exemplar_boxes,
                 save_path=os.path.join(save_dir, f'{file_name}_density_map.png')
             )
 
